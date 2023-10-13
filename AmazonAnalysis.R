@@ -88,16 +88,16 @@ preds %>%
 
 # setwd("C:/Users/rileyw/AmazonEmployeeAccess")
 
-# vroom("train.csv") -> train
-# vroom("test.csv") -> test
-# 
-# train %>%
-#   mutate(ACTION = as_factor(ACTION)) -> train
-# 
-# am_recipe <- recipe(ACTION ~ .,data = train) %>%
-#   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
-#   step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
-#   step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+vroom("train.csv") -> train
+vroom("test.csv") -> test
+
+train %>%
+  mutate(ACTION = as_factor(ACTION)) -> train
+
+am_recipe <- recipe(ACTION ~ .,data = train) %>%
+  step_mutate_at(all_numeric_predictors(), fn = factor) %>%
+  step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
+  step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
 
 pen_mod <- logistic_reg(mixture = tune(),
                         penalty = tune()) %>%
@@ -110,7 +110,7 @@ pen_wf <- workflow() %>%
 tuning_grid <- grid_regular(
   mixture(),
   penalty(),
-  levels = 3
+  levels = 20
 )  
 
 folds <- vfold_cv(data = train, v = 5, repeats = 1)
