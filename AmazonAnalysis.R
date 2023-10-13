@@ -12,10 +12,7 @@ vroom("test.csv") -> test
 am_recipe <- recipe(ACTION ~ .,data = train) %>%
   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
   step_other(all_nominal_predictors(), threshold = .01, other = "OTHER")%>%
-  step_dummy(all_nominal_predictors()) # %>%
-
-
-  step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+  # step_dummy(all_nominal_predictors())
   
 prep(am_recipe) %>%
   bake(new_data = train)
@@ -83,10 +80,10 @@ preds %>%
 
 #------------- Penalized Logistic Regression ------------------
 
-library(tidyverse)
-library(tidymodels)
-library(vroom)
-library(embed)
+# library(tidyverse)
+# library(tidymodels)
+# library(vroom)
+# library(embed)
 
 
 setwd("C:/Users/rileyw/AmazonEmployeeAccess")
@@ -136,3 +133,5 @@ preds %>%
   mutate(Id = test$id, Action = .pred_1) %>%
   select(Id, Action) %>%
   vroom_write(., "submission.csv", delim = ",")
+
+
