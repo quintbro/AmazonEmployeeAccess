@@ -11,8 +11,8 @@ vroom("test.csv") -> test
 
 am_recipe <- recipe(ACTION ~ .,data = train) %>%
   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
-  step_other(all_nominal_predictors(), threshold = .01, other = "OTHER")%>%
-  # step_dummy(all_nominal_predictors())
+  step_other(all_nominal_predictors(), threshold = .01, other = "OTHER") %>%
+  step_dummy(all_nominal_predictors())
   
 prep(am_recipe) %>%
   bake(new_data = train)
@@ -23,10 +23,10 @@ train %>%
   table()
 
 # creating mosaic
-train %>%
-  mutate_all(as_factor) %>%
-ggplot() +
-  geom_mosaic(aes(x = product(ACTION, ROLE_FAMILY), fill = ACTION))
+#train %>%
+#  mutate_all(as_factor) %>%
+#ggplot() +
+#  geom_mosaic(aes(x = product(ACTION, ROLE_FAMILY), fill = ACTION))
 
 
 length(unique(train$RESOURCE))
@@ -88,16 +88,16 @@ preds %>%
 
 # setwd("C:/Users/rileyw/AmazonEmployeeAccess")
 
-vroom("train.csv") -> train
-vroom("test.csv") -> test
-
-train %>%
-  mutate(ACTION = as_factor(ACTION)) -> train
-
-am_recipe <- recipe(ACTION ~ .,data = train) %>%
-  step_mutate_at(all_numeric_predictors(), fn = factor) %>%
-  step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
-  step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+# vroom("train.csv") -> train
+# vroom("test.csv") -> test
+# 
+# train %>%
+#   mutate(ACTION = as_factor(ACTION)) -> train
+# 
+# am_recipe <- recipe(ACTION ~ .,data = train) %>%
+#   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
+#   step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
+#   step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
 
 pen_mod <- logistic_reg(mixture = tune(),
                         penalty = tune()) %>%
