@@ -4,7 +4,7 @@ library(tidymodels)
 library(embed)
 library(vroom)
 
-setwd("C:/Users/rileyw/AmazonEmployeeAccess")
+# setwd("C:/Users/rileyw/AmazonEmployeeAccess")
 
 vroom("train.csv") -> train
 vroom("test.csv") -> test
@@ -46,7 +46,7 @@ library(tidymodels)
 library(vroom)
 
 
-setwd("C:/Users/rileyw/AmazonEmployeeAccess")
+# setwd("C:/Users/rileyw/AmazonEmployeeAccess")
 
 vroom("train.csv") -> train
 vroom("test.csv") -> test
@@ -86,7 +86,7 @@ preds %>%
 # library(embed)
 
 
-setwd("C:/Users/rileyw/AmazonEmployeeAccess")
+# setwd("C:/Users/rileyw/AmazonEmployeeAccess")
 
 vroom("train.csv") -> train
 vroom("test.csv") -> test
