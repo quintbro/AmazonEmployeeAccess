@@ -1,6 +1,6 @@
 library(tidyverse)
 library(tidymodels)
-library(ggmosaic)
+# library(ggmosaic)
 library(embed)
 library(vroom)
 
