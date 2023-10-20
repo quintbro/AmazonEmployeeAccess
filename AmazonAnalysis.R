@@ -136,14 +136,139 @@
 
 # #--------------- Classification Random Forests --------------------
 
+# library(tidymodels)
+# library(tidyverse)
+# library(vroom)
+# library(embed)
+# library(doParallel)
+# 
+# cl <- makePSOCKcluster(30)
+# registerDoParallel(cl)
+# 
+# # setwd("C:/Users/rileyw/AmazonEmployeeAccess")
+# 
+# vroom("train.csv") -> train
+# vroom("test.csv") -> test
+# 
+# train %>%
+#   mutate(ACTION = as_factor(ACTION)) -> train
+# 
+# am_recipe <- recipe(ACTION ~ .,data = train) %>%
+#   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
+#   step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
+#   step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+# 
+# crf_mod <- rand_forest(
+#   mtry = tune(),
+#   min_n = tune(),
+#   trees = 1000
+# ) %>%
+#   set_engine("ranger") %>%
+#   set_mode("classification")
+# 
+# crf_wf <- workflow() %>%
+#   add_model(crf_mod) %>%
+#   add_recipe(am_recipe)
+# 
+# tuning_grid <- grid_regular(mtry(range = c(1, 9)),
+#                             min_n(),
+#                             levels = 20)
+# 
+# folds <- vfold_cv(train, v = 10)
+# 
+# cv_results <- crf_wf %>%
+#   tune_grid(resamples = folds,
+#             grid = tuning_grid,
+#             metrics = metric_set(roc_auc))
+# 
+# params <- cv_results %>%
+#   select_best("roc_auc")
+# 
+# print(params) # mtry: 4, min_n: 4
+# 
+# final_wf <- crf_wf %>%
+#   finalize_workflow(params) %>%
+#   fit(data = train)
+# 
+# preds <- predict(final_wf, new_data = test, type = "prob")
+# 
+# stopCluster(cl)
+# 
+# preds %>%
+#   mutate(Id = test$id, Action = .pred_1) %>%
+#   select(Id, Action) %>%
+#   vroom_write(., "submission.csv", delim = ",")
+
+
+# #------------------------- Naive Bayes ---------------------------
+# 
+# library(tidyverse)
+# library(tidymodels)
+# library(embed)
+# library(vroom)
+# library(discrim)
+# library(doParallel)
+# 
+# # setwd("C:/Users/rileyw/AmazonEmployeeAccess")
+# 
+# vroom("train.csv") -> train
+# vroom("test.csv") -> test
+# 
+# train %>%
+#   mutate(ACTION = as_factor(ACTION)) -> train
+# 
+# am_recipe <- recipe(ACTION ~ .,data = train) %>%
+#   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
+#   step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
+#   step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+# 
+# nb_mod <- naive_Bayes(smoothness = tune(),
+#                       Laplace = tune()) %>%
+#   set_mode("classification") %>%
+#   set_engine("naivebayes") 
+# 
+# nb_wf <- workflow() %>%
+#   add_model(nb_mod) %>%
+#   add_recipe(am_recipe)
+# 
+# cv_grid <- grid_regular(smoothness(),
+#                         Laplace(),
+#                         levels = 10)
+# folds <- vfold_cv(train, v = 10)
+# 
+# cl = makePSOCKcluster(10)
+# registerDoParallel(cl)
+# 
+# cv_results <- nb_wf %>%
+#   tune_grid(grid = cv_grid,
+#             resamples = folds,
+#             metrics = metric_set(roc_auc))
+# 
+# params <- cv_results %>%
+#   select_best("roc_auc")
+# 
+# final_wf <- nb_wf %>%
+#   finalize_workflow(params) %>%
+#   fit(data = train)
+# 
+# preds <- predict(final_wf, new_data = test, type = "prob")
+# 
+# stopCluster(cl)
+# 
+# preds %>%
+#   mutate(Id = test$id, Action = .pred_1) %>%
+#   select(Id, Action) %>%
+#   vroom_write(., "submission.csv", delim = ",")
+
+
+# #--------- K-Nearest Neighbors -----------
+
 library(tidymodels)
 library(tidyverse)
 library(vroom)
 library(embed)
 library(doParallel)
 
-cl <- makePSOCKcluster(10)
-registerDoParallel(cl)
 
 # setwd("C:/Users/rileyw/AmazonEmployeeAccess")
 
@@ -156,47 +281,41 @@ train %>%
 am_recipe <- recipe(ACTION ~ .,data = train) %>%
   step_mutate_at(all_numeric_predictors(), fn = factor) %>%
   step_other(all_nominal_predictors(), threshold = .001, other = "OTHER")%>%
-  step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION))
+  step_lencode_mixed(all_nominal_predictors(), outcome = vars(ACTION)) %>%
+  step_normalize(all_numeric_predictors())
 
-crf_mod <- rand_forest(
-  mtry = tune(),
-  min_n = tune(),
-  trees = 1000
-) %>%
-  set_engine("ranger") %>%
-  set_mode("classification")
+knn_mod <- nearest_neighbor(neighbors = tune(),
+                            dist_power = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("kknn")
 
-crf_wf <- workflow() %>%
-  add_model(crf_mod) %>%
+
+knn_wf <- workflow() %>%
+  add_model(knn_mod) %>%
   add_recipe(am_recipe)
 
-tuning_grid <- grid_regular(mtry(range = c(1, 9)),
-                            min_n(),
-                            levels = 20)
-
+param_grid <- grid_regular(neighbors(),
+                           dist_power(),
+                           levels = 10)
 folds <- vfold_cv(train, v = 10)
 
-cv_results <- crf_wf %>%
-  tune_grid(resamples = folds,
-            grid = tuning_grid,
+cv_results <- knn_wf %>%
+  tune_grid(grid = param_grid,
+            resamples = folds,
             metrics = metric_set(roc_auc))
 
 params <- cv_results %>%
   select_best("roc_auc")
 
-final_wf <- crf_wf %>%
+print(params)
+
+final_wf <- knn_wf %>%
   finalize_workflow(params) %>%
   fit(data = train)
 
 preds <- predict(final_wf, new_data = test, type = "prob")
 
-stopCluster(cl)
-
 preds %>%
   mutate(Id = test$id, Action = .pred_1) %>%
   select(Id, Action) %>%
   vroom_write(., "submission.csv", delim = ",")
-
-
-
-
